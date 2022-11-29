@@ -135,3 +135,9 @@ LOGIN_REDIRECT_URL = "home"  # ログイン成功後に遷移するページを�
 LOGOUT_REDIRECT_URL = "index"  # ログアウト後に遷移するページを指定（ログアウトはあとで実装する）
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+try:
+    from .local_settings import *
+except ImportError:
+    # local_settings.py が存在しなくてもエラーにならないようにする
+    pass

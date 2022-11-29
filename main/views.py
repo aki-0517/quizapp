@@ -4,6 +4,8 @@ from django.contrib.auth import views as auth_views  # 追加
 from .forms import LoginForm, SignUpForm,QuizForm, QuestionForm, ChoiceForm
 from django.contrib.auth.decorators import login_required 
 from .models import Quiz, Choice, QuizAnswer # 追加
+from django.db.models import Avg # 追加
+
 
 def index(request):
     return render(request, "main/index.html")
@@ -119,6 +121,7 @@ def answer_quiz(request, quiz_id):
     # question オブジェクトの数を集計する
     question_num = questions.count()
     user = request.user
+    print(type(user))
 
     if request.method == "POST":
         for question in questions:
@@ -134,11 +137,29 @@ def answer_quiz(request, quiz_id):
         answer_rate = score*100/question_num
         # 得点と得点率をデータベースに保存する
         QuizAnswer.objects.create(
-            user=user, quiz=quiz, score=score, answer_rate=answer_rate
+            user=user,
+            quiz=quiz,
+            score=score,
+            answer_rate=answer_rate,
         )
+
+        answer_rate = score*100/question_num
+        QuizAnswer.objects.create(user=user, quiz=quiz, score=score, answer_rate=answer_rate)
+
+        return redirect("result", quiz_id)
    
     context = {
         "quiz":quiz,
         "questions":questions,
     }
     return render(request, "main/answer_quiz.html", context)
+
+def result(request, quiz_id):
+    user = request.user
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    quiz_answer = QuizAnswer.objects.filter(quiz=quiz, user=user).order_by("answered_at").last()
+    context = {
+        "quiz_answer":quiz_answer,
+    }
+
+    return render(request, "main/result.html", context)    
